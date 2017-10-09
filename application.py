@@ -35,6 +35,11 @@ def menuItemJSON(playlist_id, song_id):
 # END JSON ENDPOINTS
 
 @app.route('/')
+@app.route('/playlists/')
+def homePage():
+    playlists = session.query(Playlist).all()
+    return render_template('homePage.html', playlists=playlists)
+
 @app.route('/playlists/<int:playlist_id>/')
 def playlistsPage(playlist_id):
     playlist = session.query(Playlist).filter_by(id=playlist_id).one()
@@ -333,10 +338,10 @@ def disconnect():
         del login_session['user_id']
         del login_session['provider']
         flash("You have successfully been logged out.")
-        return redirect(url_for('playlistsPage', playlist_id=1))
+        return redirect(url_for('homePage'))
     else:
         flash("You were not logged in")
-        return redirect(url_for('playlistsPage', playlist_id=1))
+        return redirect(url_for('homePage'))
 
 # User Helper Functions
 def createUser(login_session):
