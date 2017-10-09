@@ -7,7 +7,7 @@
 
 <div class="row banner menu">
   <div class="col-md-11 col-md-offset-1 padding-none">
-    <h1>{{playlist.name}}</h1>
+    <h1>All Playlists</h1>
   </div>
 </div>
 
@@ -32,12 +32,14 @@
   <div>
     <h2>Recent Playlists</h2>
       {% for i in playlists %}
-        <div class="song-item">
-          <h3>{{i.name}}</h3>
-          <p>{{i.link}}</p>
-          <p class="song-genre">{{i.genre}}</p>
-          <a href="{{url_for('editSongItem', playlist_id=playlist.id, song_id=i.id)}}">Edit</a> | 
-          <a href="{{url_for('deleteSongItem', playlist_id=playlist.id, song_id=i.id )}}">Delete</a>
+        <div class="playlist-item">
+          <h3>
+            <a href="{{url_for('playlistsPage', playlist_id=i.id)}}">
+              <span class="glyphicon" aria-hidden="true"></span>{{i.name}}
+            </a>
+          </h3>
+          <span> {{i.timestamp}} </span>
+          <span> {{i.user.name}} </span>
         </div>
       {% endfor %}
   </div>

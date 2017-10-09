@@ -2,13 +2,15 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask import session as login_session
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
-from sqlalchemy import create_engine, asc
+from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Playlist, SongItem, User
 import random, string
 import httplib2
 import json
 import requests
+import datetime
+import sqlalchemy
 
 
 app = Flask(__name__)
@@ -34,12 +36,84 @@ def menuItemJSON(playlist_id, song_id):
     return jsonify(SongItem=songItem.serialize)
 # END JSON ENDPOINTS
 
+# HOME page
 @app.route('/')
+@app.route('/playlists/')
+def homePage():
+    playlists = session.query(Playlist).order_by(desc(Playlist.timestamp)).limit(10).all()
+    return render_template('homePage.html', playlists=playlists)
+
+# PLAYLIST pages
 @app.route('/playlists/<int:playlist_id>/')
 def playlistsPage(playlist_id):
     playlist = session.query(Playlist).filter_by(id=playlist_id).one()
     items = session.query(SongItem).filter_by(playlist_id=playlist.id)
     return render_template('list.html', playlist=playlist, items=items)
+
+# Create a new playlist
+@app.route('/playlists/new/', methods=['GET', 'POST'])
+def newPlaylistItem():
+    # Only need to check if user is logged in
+    if 'username' not in login_session:
+        return redirect('/login')
+
+    if request.method == 'POST':
+        newPlaylist = Playlist(user_id=login_session['user_id'],
+                               name=request.form['name'],
+                               timestamp = sqlalchemy.func.current_timestamp(),
+                               description=request.form['description'])
+        session.add(newPlaylist)
+        session.commit()
+        flash("New playlist has been added!")
+        return redirect(url_for('playlistsPage', playlist_id=newPlaylist.id))
+    else:
+        return render_template('newplaylistitem.html')
+
+# Edit a playlist
+@app.route('/playlists/<int:playlist_id>/edit/', methods=['GET', 'POST'])
+def editPlaylistItem(playlist_id):
+    if 'username' not in login_session:
+        return redirect('/login')
+    playlist = session.query(Playlist).filter_by(id=playlist_id).one()
+    if login_session['user_id'] != playlist.user_id:
+        return "<script>function myFunction() {alert('You are not authorized to edit this playlist.');}</script><body onload='myFunction()'>"
+    if request.method == 'POST':
+        if request.form['name']:
+            playlist.name = request.form['name']
+        if request.form['description']:
+            playlist.description = request.form['description']
+        playlist.timestamp = sqlalchemy.func.current_timestamp()
+        session.add(playlist)
+        session.commit()
+        # TODO: Specific name of the playlist.
+        flash("The playlist has been edited!")
+        return redirect(url_for('playlistsPage', playlist_id=playlist_id))
+    else:
+        return render_template(
+            'editplaylistitem.html', playlist=playlist)
+
+# Delete a playlist
+@app.route('/playlists/<int:playlist_id>/delete/', methods=['GET', 'POST'])
+def deletePlaylistItem(playlist_id):
+    if 'username' not in login_session:
+        return redirect('/login')
+    playlist = session.query(Playlist).filter_by(id=playlist_id).one()
+    itemToDelete = session.query(SongItem).filter_by(playlist_id=playlist.id).all()
+    if login_session['user_id'] != playlist.user_id:
+        return "<script>function myFunction() {alert('You are not authorized to delete this whole playlist.');}</script><body onload='myFunction()'>"
+    if request.method == 'POST':
+        for i in itemToDelete:
+            session.delete(i)
+        session.delete(playlist)
+        session.commit()
+        # TODO: Specific name of the song.
+        flash("The playlist and all its songs have been deleted!")
+        return redirect(url_for('homePage'))
+    else:
+        return render_template('deleteplaylistitem.html', playlist=playlist, item=itemToDelete)
+
+
+# SONG pages
     
 
 # Create new playlist songs
@@ -56,6 +130,9 @@ def newSongItem(playlist_id):
             name=request.form['name'], link=request.form['link'],
             genre=request.form['genre'], playlist_id=playlist_id)
         session.add(newItem)
+        session.commit()
+        playlist.timestamp = sqlalchemy.func.current_timestamp()
+        session.add(playlist)
         session.commit()
         flash("New song has been added!")
         return redirect(url_for('playlistsPage', playlist_id=playlist_id))
@@ -80,6 +157,9 @@ def editSongItem(playlist_id, song_id):
             editedItem.link = request.form['link']
         session.add(editedItem)
         session.commit()
+        playlist.timestamp = sqlalchemy.func.current_timestamp()
+        session.add(playlist)
+        session.commit()
         # TODO: Specific name of the song.
         flash("The song has been edited!")
         return redirect(url_for('playlistsPage', playlist_id=playlist_id))
@@ -98,6 +178,9 @@ def deleteSongItem(playlist_id, song_id):
         return "<script>function myFunction() {alert('You are not authorized to delete song items to this playlist. Please create your own playlist in order to delete items.');}</script><body onload='myFunction()'>"
     if request.method == 'POST':
         session.delete(itemToDelete)
+        session.commit()
+        playlist.timestamp = sqlalchemy.func.current_timestamp()
+        session.add(playlist)
         session.commit()
         # TODO: Specific name of the song.
         flash("Song has been deleted!")
@@ -280,7 +363,22 @@ def fbdisconnect():
     url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id,access_token)
     h = httplib2.Http()
     result = h.request(url, 'DELETE')[1]
-    return "you have been logged out"
+
+    if result['status'] == 200:
+        del login_session['facebook_id']
+        del login_session['username']
+        del login_session['email']
+        del login_session['user_id']
+
+        response = make_response(json.dumps('Successfully disconnected.'), 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    else:
+        # The given token was invalid
+        response = make_response(json.dumps('Failed to revoke token for given user.'), 400)
+        response.headers['Content-Type'] = 'application/json'
+        return response
 
 # Disconnect - revoke a current user's token and reset their login_session
 @app.route('/gdisconnect')
@@ -327,16 +425,12 @@ def disconnect():
             gdisconnect()
         if login_session['provider'] == 'facebook':
             fbdisconnect()
-            del login_session['facebook_id']
-        del login_session['username']
-        del login_session['email']
-        del login_session['user_id']
         del login_session['provider']
         flash("You have successfully been logged out.")
-        return redirect(url_for('playlistsPage', playlist_id=1))
+        return redirect(url_for('homePage'))
     else:
         flash("You were not logged in")
-        return redirect(url_for('playlistsPage', playlist_id=1))
+        return redirect(url_for('homePage'))
 
 # User Helper Functions
 def createUser(login_session):

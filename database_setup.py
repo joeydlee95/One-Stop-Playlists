@@ -1,6 +1,8 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String
+import datetime
+import sqlalchemy
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -21,6 +23,7 @@ class Playlist(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
+    timestamp = Column(DateTime, default=sqlalchemy.func.current_timestamp())
     description = Column(String(250))
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
