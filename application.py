@@ -2,13 +2,15 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask import session as login_session
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
-from sqlalchemy import create_engine, asc
+from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Playlist, SongItem, User
 import random, string
 import httplib2
 import json
 import requests
+import datetime
+import sqlalchemy
 
 
 app = Flask(__name__)
@@ -38,7 +40,7 @@ def menuItemJSON(playlist_id, song_id):
 @app.route('/')
 @app.route('/playlists/')
 def homePage():
-    playlists = session.query(Playlist).all()
+    playlists = session.query(Playlist).order_by(desc(Playlist.timestamp)).limit(10).all()
     return render_template('homePage.html', playlists=playlists)
 
 # PLAYLIST pages
@@ -56,8 +58,9 @@ def newPlaylistItem():
         return redirect('/login')
 
     if request.method == 'POST':
-        newPlaylist = Playlist(user_id=login_session['user_id'], 
-                               name=request.form['name'], 
+        newPlaylist = Playlist(user_id=login_session['user_id'],
+                               name=request.form['name'],
+                               timestamp = sqlalchemy.func.current_timestamp(),
                                description=request.form['description'])
         session.add(newPlaylist)
         session.commit()
@@ -79,6 +82,7 @@ def editPlaylistItem(playlist_id):
             playlist.name = request.form['name']
         if request.form['description']:
             playlist.description = request.form['description']
+        playlist.timestamp = sqlalchemy.func.current_timestamp()
         session.add(playlist)
         session.commit()
         # TODO: Specific name of the playlist.
@@ -127,6 +131,9 @@ def newSongItem(playlist_id):
             genre=request.form['genre'], playlist_id=playlist_id)
         session.add(newItem)
         session.commit()
+        playlist.timestamp = sqlalchemy.func.current_timestamp()
+        session.add(playlist)
+        session.commit()
         flash("New song has been added!")
         return redirect(url_for('playlistsPage', playlist_id=playlist_id))
     else:
@@ -150,6 +157,9 @@ def editSongItem(playlist_id, song_id):
             editedItem.link = request.form['link']
         session.add(editedItem)
         session.commit()
+        playlist.timestamp = sqlalchemy.func.current_timestamp()
+        session.add(playlist)
+        session.commit()
         # TODO: Specific name of the song.
         flash("The song has been edited!")
         return redirect(url_for('playlistsPage', playlist_id=playlist_id))
@@ -168,6 +178,9 @@ def deleteSongItem(playlist_id, song_id):
         return "<script>function myFunction() {alert('You are not authorized to delete song items to this playlist. Please create your own playlist in order to delete items.');}</script><body onload='myFunction()'>"
     if request.method == 'POST':
         session.delete(itemToDelete)
+        session.commit()
+        playlist.timestamp = sqlalchemy.func.current_timestamp()
+        session.add(playlist)
         session.commit()
         # TODO: Specific name of the song.
         flash("Song has been deleted!")
