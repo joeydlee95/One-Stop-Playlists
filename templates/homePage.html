@@ -27,11 +27,11 @@
   <div class="col-md-1"></div>
 
   
-{% if items !=[] %} 
+{% if playlists !=[] %} 
 <div class="row">
   <div>
-    <h2>All songs</h2>
-      {% for i in items %}
+    <h2>Recent Playlists</h2>
+      {% for i in playlists %}
         <div class="song-item">
           <h3>{{i.name}}</h3>
           <p>{{i.link}}</p>
