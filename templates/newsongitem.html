@@ -1,36 +1,26 @@
 {% extends "main.html" %}
 {% block content %}
 {% include "header.html" %}
-<div class="row divider green">
-  <div class="col-md-12"></div>
-</div>
+<div class="w3-container w3-padding-64">
+  <h1>Add a New Video to Playlist</h1>
 
-<div class="row banner video">
-  <div class="col-md-11 col-md-offset-1 padding-none">
-    <h1>Add a New Video to Playlist</h1>
-  </div>
-</div>
+  <form action="#" method="POST">
+    <div>
+      <label for="name">Name:</label>
+      <input type="text" maxlength="50" class="w3-input w3-padding-16" name="name" placeholder="Name of the song">
+      
+      <label for="genre">Genre:</label>
+      <input type="text" class="w3-input w3-padding-16" maxlength="20" name="genre" placeholder="Genre">
 
-<div class="row">
-  <div class="col-md-6 col-md-offset-1 padding-top">
-    <form action="#" method="POST">
-      <div class="form-group">
-        <label for="name">Name:</label>
-        <input type ="text" maxlength="50" class="form-control" name="name" placeholder="Name of the song">
-
-        <label for="link">Link:</label>
-        <textarea class="form-control" maxlength="250" rows="3" name="link" placeholder="URL link. Ex: http://www.youtube.com/"></textarea>
-
-        <label for="genre">Genre:</label>
-        <div class="input-group">
-          <div class="input-group-addon">$</div>
-          <input type ="text" class="form-control" maxlength="20" name="genre" placeholder="Genre">
-        </div>
-
-        <button type="submit" class="btn btn-default" id="submit" type="submit">
-        <span class="glyphicon glyphicon-glass" aria-hidden="true"></span>Create</button>
-      </div>
-    </form>
-  </div>
-</div>
+      <label for="link">Link:</label>
+      <input type="text" class="w3-input w3-padding-16" maxlength="100" name="link" placeholder="URL link. Ex: http://www.youtube.com/">
+      
+      <button type="submit" class="w3-button w3-light-grey w3-section" name="submit">Create</button>
+      <button type="button" class="w3-button w3-light-grey w3-section">
+        <a href="{{url_for('playlistsPage', playlist_id=playlist_id)}}" class="cancel">
+          Cancel
+        </a>
+      </button>
+    </div>
+  </form>
 {% endblock %}

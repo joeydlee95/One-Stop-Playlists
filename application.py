@@ -5,7 +5,7 @@ from oauth2client.client import FlowExchangeError
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Playlist, SongItem, User
-import random, string
+import random, string, os
 import httplib2
 import json
 import requests
@@ -16,7 +16,7 @@ import sqlalchemy
 app = Flask(__name__)
 
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
-APPLICATION_NAME = "HEar Me hear You Application"
+APPLICATION_NAME = "Watch This!"
 
 engine = create_engine('sqlite:///playlist.db')
 Base.metadata.bind = engine
@@ -464,6 +464,19 @@ def getUserID(email):
         return user.id
     except:
         return None
+
+@app.context_processor
+def override_url_for():
+    return dict(url_for=dated_url_for)
+
+def dated_url_for(endpoint, **values):
+    if endpoint == 'static':
+        filename = values.get('filename', None)
+        if filename:
+            file_path = os.path.join(app.root_path,
+                                     endpoint, filename)
+            values['q'] = int(os.stat(file_path).st_mtime)
+    return url_for(endpoint, **values)
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'

@@ -1,17 +1,14 @@
-<div class="row top-menu">
-  <div class="col-md-6">
-    <a href="{{url_for('homePage')}}">
-      <span class="glyphicon glyphicon-home" aria-hidden="true"></span>Show All Playlists
-    </a>
+<!-- Navbar (sit on top) -->
+<div class="w3-top">
+  <div class="w3-bar w3-white w3-padding w3-card-2" style="letter-spacing: 4px;">
+    <a href="{{ url_for('homePage' )}}" class="w3-bar-item w3-button">Home</a>
+    <!-- Right-sided navbar links. Hide them on small screens -->
+    <div class="w3-right w3-hide-small">
+      {%if 'username' not in session %}
+        <a href="{{ url_for('showLogin') }}" class="w3-bar-item w3-button">Login</a>
+      {% else %}
+        <a href="{{ url_for('disconnect') }}" class="w3-bar-item w3-button">Logout</a>
+      {% endif %}
+    </div>
   </div>
-  
-  <div class="col-md-6 text-right">
-    {%if 'username' not in session %}
-      <a href="{{url_for('showLogin')}}">Click Here to Login </a>
-    {% else %}
-      <span> Logged in as {{session.username}} </span>
-      <a href="{{url_for('disconnect')}}">Logout </a>
-    {% endif %}
-  </div>
-
 </div>
