@@ -50,6 +50,20 @@ def playlistsPage(playlist_id):
     items = session.query(SongItem).filter_by(playlist_id=playlist.id)
     return render_template('list.html', playlist=playlist, items=items)
 
+@app.route('/playlists/myPage/')
+def personalPage():
+    if 'username' not in login_session:
+        return redirect('/login')
+
+    playlists = session.query(Playlist).filter_by(user_id=login_session['user_id']).order_by(desc(Playlist.timestamp)).all()
+    if not playlists:
+        flash("Add playlists to create a personal page.")
+        return redirect(url_for('homePage'))
+    else:
+        return render_template('personalPage.html', playlists=playlists)
+
+
+
 # Create a new playlist
 @app.route('/playlists/new/', methods=['GET', 'POST'])
 def newPlaylistItem():
