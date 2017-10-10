@@ -1,15 +1,18 @@
 {% extends "main.html" %}
 {% block content %}
 {% include "header.html" %}
-<div class="row divider green">
-  <div class="col-md-12"></div>
+
+<div class="content w3-center">
+  <h1>All Playlists</h1>
 </div>
 
-<div class="row banner menu">
-  <div class="col-md-11 col-md-offset-1 padding-none">
-    <h1>All Playlists</h1>
+{%if 'username' in session %}
+  <div class="w3-center">
+    <span>
+      <a href="{{url_for('newPlaylistItem')}}" class="w3-button">Create a Playlist</a>
+    </span>
   </div>
-</div>
+{% endif %}
 
 <div class="flash">
   {% with messages = get_flashed_messages() %}
@@ -22,21 +25,16 @@
     {% endif %}
   {% endwith %}
 </div>
-  
-<div class="row padding-top padding-bottom">
-  <div class="col-md-1"></div>
 
+<hr>
   
 {% if playlists !=[] %} 
-<div class="row">
+<div class="w3-container w3-padding-8">
   <div>
-    <h2>Recent Playlists</h2>
       {% for i in playlists %}
-        <div class="playlist-item">
+        <div>
           <h3>
-            <a href="{{url_for('playlistsPage', playlist_id=i.id)}}">
-              <span class="glyphicon" aria-hidden="true"></span>{{i.name}}
-            </a>
+            <a href="{{url_for('playlistsPage', playlist_id=i.id)}}">{{i.name}}</a>
           </h3>
           <span> {{i.timestamp}} </span>
           <span> {{i.user.name}} </span>
@@ -44,7 +42,6 @@
       {% endfor %}
   </div>
 </div>
+
 {% endif %}
 {% endblock %}
-
-

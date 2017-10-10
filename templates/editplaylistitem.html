@@ -1,34 +1,23 @@
 {% extends "main.html" %}
 {% block content %}
 {% include "header.html" %}
-  <div class="row divider green">
-    <div class="col-md-12"></div>
-  </div>
+<div class="w3-container w3-padding-64">
+  <h1>Edit Playlist</h1>
 
-  <div class="row banner menu">
-    <div class="col-md-11 col-md-offset-1 padding-none">
-      <h1>Edit Playlist</h1>
-    </div>
-  </div>
+  <form action="#" method="POST">
+    <label for="name">Name:</label>
+    <input type="text" maxlength="50" class="w3-input w3-padding-16" name="name" value="{{playlist.name}}">
+    
+    <label for="description">description:</label>
+    <textarea class="w3-input w3-padding-16" maxlength="500" name="description">{{playlist.description}}</textarea>
+    
+    <button type="submit" class="w3-button w3-light-grey w3-section" id="submit" type="submit">Save</button>
+    <button type="button" class="w3-button w3-light-grey w3-section">
+      <a href="{{url_for('playlistsPage', playlist_id=playlist.id)}}" class="cancel">
+        Cancel
+      </a>
+    </button>
+  </form>
 
-  <div class="row">
-    <div class="col-md-6 col-md-offset-1 padding-top">
-      <form action="#" method="POST">
-        <div class="form-group">
-          <label for="name">Name:</label>
-          <input type ="text" maxlength="50" class="form-control" name="name" value="{{playlist.name}}">
-          
-          <label for="description">description:</label>
-          <input type ="text" class="form-control" maxlength="500" name="description" value="{{playlist.description}}">
-          
-          <button type="submit" class="btn btn-default" id="submit" type="submit">
-          <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>Save</button>
-          <a href="{{url_for('playlistsPage', playlist_id=playlist.id)}}">
-            <button class="btn btn-default delete">
-            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Cancel</button>
-          </a>
-        </div>
-      </form>
-    </div>
-  </div>
+</div>
 {% endblock %}

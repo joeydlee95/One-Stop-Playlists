@@ -1,17 +1,13 @@
 {% extends "main.html" %}
 {% block content %}
 {% include "header.html" %}
-<div class="row divider green">
-  <div class="col-md-12"></div>
-</div>
 
-<div class="row banner menu">
-  <div class="col-md-11 col-md-offset-1 padding-none">
-    <h1>All Playlists</h1>
+<div class="w3-content content" style="max-width:1100px">
+  <div class="w3-center">
+    <h1>Recent Playlists</h1>
   </div>
-</div>
 
-<div class="flash">
+  <div class="flash">
   {% with messages = get_flashed_messages() %}
     {% if messages %}  
       <ul>
@@ -21,30 +17,25 @@
       </ul>
     {% endif %}
   {% endwith %}
-</div>
-  
-<div class="row padding-top padding-bottom">
-  <div class="col-md-1"></div>
+  </div>
 
-  
-{% if playlists !=[] %} 
-<div class="row">
-  <div>
-    <h2>Your Recent Playlists</h2>
+  <hr>
+
+  {% if playlists !=[] %} 
+  <div class="w3-container w3-padding-16">
+    <div>
       {% for i in playlists %}
         <div class="playlist-item">
           <h3>
-            <a href="{{url_for('playlistsPage', playlist_id=i.id)}}">
-              <span class="glyphicon" aria-hidden="true"></span>{{i.name}}
-            </a>
+            <a href="{{url_for('playlistsPage', playlist_id=i.id)}}">{{i.name}}</a>
           </h3>
           <span> {{i.timestamp}} </span>
           <span> {{i.user.name}} </span>
         </div>
       {% endfor %}
+    </div>
   </div>
 </div>
+
 {% endif %}
 {% endblock %}
-
-
