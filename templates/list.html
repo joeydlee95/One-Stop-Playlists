@@ -37,8 +37,7 @@
     <div>
         {% for i in items %}
           <div class="song-item">
-            <h3>{{i.name}}</h3>
-            <p>{{i.link}}</p>
+            <h3><a href="{{i.link}}">{{i.name}}</a></h3>
             <p class="song-genre">{{i.genre}}</p>
             <a href="{{url_for('editSongItem', playlist_id=playlist.id, song_id=i.id)}}" class="w3-light-grey button">Edit</a> | 
             <a href="{{url_for('deleteSongItem', playlist_id=playlist.id, song_id=i.id )}}" class="w3-light-grey button">Delete</a>
