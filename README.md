@@ -11,7 +11,7 @@ This is an application that can persistently store your favorite songs or videos
 5. Set up the database: python database_setup.py
 
 ## Running
-Use python application.py and go to localhost:5000/.
+Use python application.py and go to localhost:5000/
 
 ## File Layout
 application.py
