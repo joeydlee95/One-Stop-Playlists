@@ -16,7 +16,7 @@ import sqlalchemy
 app = Flask(__name__)
 
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
-APPLICATION_NAME = "Watch This!"
+APPLICATION_NAME = "Hear Me Out!"
 
 engine = create_engine('sqlite:///playlist.db')
 Base.metadata.bind = engine
