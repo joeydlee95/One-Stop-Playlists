@@ -16,7 +16,8 @@ import sqlalchemy
 
 app = Flask(__name__)
 
-CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
+CLIENT_ID = json.loads(open('client_secrets.json', 'r')
+                       .read())['web']['client_id']
 APPLICATION_NAME = "Hear Me Out!"
 
 engine = create_engine('sqlite:///playlist.db')
@@ -44,7 +45,9 @@ def menuItemJSON(playlist_id, song_id):
 @app.route('/')
 @app.route('/playlists/')
 def homePage():
-    playlists = session.query(Playlist).order_by(desc(Playlist.timestamp)).limit(10).all()
+    playlists = session.query(Playlist) \
+                       .order_by(desc(Playlist.timestamp)) \
+                       .limit(10).all()
     return render_template('homePage.html', playlists=playlists)
 
 
@@ -61,7 +64,9 @@ def personalPage():
     if 'username' not in login_session:
         return redirect('/login')
 
-    playlists = session.query(Playlist).filter_by(user_id=login_session['user_id']).order_by(desc(Playlist.timestamp)).all()
+    playlists = session.query(Playlist) \
+                       .filter_by(user_id=login_session['user_id']) \
+                       .order_by(desc(Playlist.timestamp)).all()
     if not playlists:
         flash("Add playlists to create a personal page.")
         return redirect(url_for('homePage'))
@@ -96,7 +101,10 @@ def editPlaylistItem(playlist_id):
         return redirect('/login')
     playlist = session.query(Playlist).filter_by(id=playlist_id).one()
     if login_session['user_id'] != playlist.user_id:
-        return "<script>function myFunction() {alert('You are not authorized to edit this playlist.');}</script><body onload='myFunction()'>"
+        ret_script = "<script>function myFunction() {alert('"
+        ret_script += "You are not authorized to edit this playlist.'"
+        ret_script += ");}</script><body onload='myFunction()'>"
+        return ret_script
     if request.method == 'POST':
         if request.form['name']:
             playlist.name = request.form['name']
@@ -119,9 +127,13 @@ def deletePlaylistItem(playlist_id):
     if 'username' not in login_session:
         return redirect('/login')
     playlist = session.query(Playlist).filter_by(id=playlist_id).one()
-    itemToDelete = session.query(SongItem).filter_by(playlist_id=playlist.id).all()
+    itemToDelete = session.query(SongItem) \
+                          .filter_by(playlist_id=playlist.id).all()
     if login_session['user_id'] != playlist.user_id:
-        return "<script>function myFunction() {alert('You are not authorized to delete this whole playlist.');}</script><body onload='myFunction()'>"
+        ret_script = "<script>function myFunction() {alert('"
+        ret_script += "You are not authorized to delete this whole "
+        ret_script += "playlist.');}</script><body onload='myFunction()'>"
+        return ret_script
     if request.method == 'POST':
         for i in itemToDelete:
             session.delete(i)
@@ -131,7 +143,8 @@ def deletePlaylistItem(playlist_id):
         flash("The playlist and all its songs have been deleted!")
         return redirect(url_for('homePage'))
     else:
-        return render_template('deleteplaylistitem.html', playlist=playlist, item=itemToDelete)
+        return render_template('deleteplaylistitem.html',
+                               playlist=playlist, item=itemToDelete)
 
 
 # SONG pages
@@ -142,12 +155,19 @@ def newSongItem(playlist_id):
         return redirect('/login')
     playlist = session.query(Playlist).filter_by(id=playlist_id).one()
     if login_session['user_id'] != playlist.user_id:
-        return "<script>function myFunction() {alert('You are not authorized to add songs to this playlist. Please create your own playlist in order to add items.');}</script><body onload='myFunction()'>"
+        ret_script = "<script>function myFunction() {alert('"
+        ret_script += "You are not authorized to add songs to this "
+        ret_script += "playlist. Please create your own playlist"
+        ret_script += " in order to add items.');}</script><body"
+        ret_script += " onload='myFunction()'>"
+        return ret_script
     if request.method == 'POST':
         # TODO: Need to fix this
         newItem = SongItem(user_id=1,
-                           name=request.form['name'], link=request.form['link'],
-                           genre=request.form['genre'], playlist_id=playlist_id)
+                           name=request.form['name'],
+                           link=request.form['link'],
+                           genre=request.form['genre'],
+                           playlist_id=playlist_id)
         session.add(newItem)
         session.commit()
         playlist.timestamp = sqlalchemy.func.current_timestamp()
@@ -160,14 +180,20 @@ def newSongItem(playlist_id):
 
 
 # Edit playlists songs
-@app.route('/playlists/<int:playlist_id>/<int:song_id>/edit/', methods=['GET', 'POST'])
+@app.route('/playlists/<int:playlist_id>/<int:song_id>/edit/',
+           methods=['GET', 'POST'])
 def editSongItem(playlist_id, song_id):
     if 'username' not in login_session:
         return redirect('/login')
     editedItem = session.query(SongItem).filter_by(id=song_id).one()
     playlist = session.query(Playlist).filter_by(id=playlist_id).one()
     if login_session['user_id'] != playlist.user_id:
-        return "<script>function myFunction() {alert('You are not authorized to edit song items to this playlist. Please create your own playlist in order to edit items.');}</script><body onload='myFunction()'>"
+        ret_script = "<script>function myFunction() {alert('"
+        ret_script += "You are not authorized to edit song items to this"
+        ret_script += " playlist. Please create your own playlist "
+        ret_script += "in order to edit items.');}</script><body"
+        ret_script += " onload='myFunction()'>"
+        return ret_script
     if request.method == 'POST':
         if request.form['name']:
             editedItem.name = request.form['name']
@@ -185,18 +211,25 @@ def editSongItem(playlist_id, song_id):
         return redirect(url_for('playlistsPage', playlist_id=playlist_id))
     else:
         return render_template(
-            'editsongitem.html', playlist_id=playlist_id, song_id=song_id, item=editedItem)
+            'editsongitem.html', playlist_id=playlist_id,
+            song_id=song_id, item=editedItem)
 
 
 # Delete playlists songs
-@app.route('/playlists/<int:playlist_id>/<int:song_id>/delete/', methods=['GET', 'POST'])
+@app.route('/playlists/<int:playlist_id>/<int:song_id>/delete/',
+           methods=['GET', 'POST'])
 def deleteSongItem(playlist_id, song_id):
     if 'username' not in login_session:
         return redirect('/login')
     playlist = session.query(Playlist).filter_by(id=playlist_id).one()
     itemToDelete = session.query(SongItem).filter_by(id=song_id).one()
     if login_session['user_id'] != playlist.user_id:
-        return "<script>function myFunction() {alert('You are not authorized to delete song items to this playlist. Please create your own playlist in order to delete items.');}</script><body onload='myFunction()'>"
+        ret_script = "<script>function myFunction() {alert('"
+        ret_script += "You are not authorized to delete song items to "
+        ret_script += "this playlist. Please create your own playlist in "
+        ret_script += "order to delete items.');}</script><body"
+        ret_script += " onload='myFunction()'>"
+        return ret_script
     if request.method == 'POST':
         session.delete(itemToDelete)
         session.commit()
@@ -213,7 +246,8 @@ def deleteSongItem(playlist_id, song_id):
 # Logins
 @app.route('/login')
 def showLogin():
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
+    state = ''.join(random.choice(string.ascii_uppercase +
+                    string.digits) for x in xrange(32))
     login_session['state'] = state
     return render_template('login.html', STATE=state)
 
@@ -227,24 +261,23 @@ def fbconnect():
         return response
     access_token = request.data
 
-    app_id = json.loads(open('fb_client_secrets.json', 'r').read())['web']['app_id']
-    app_secret = json.loads(open('fb_client_secrets.json', 'r').read())['web']['app_secret']
-    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (app_id, app_secret, access_token)
+    app_id = json.loads(open('fb_client_secrets.json', 'r')
+                        .read())['web']['app_id']
+    app_secret = json.loads(open('fb_client_secrets.json', 'r')
+                            .read())['web']['app_secret']
+    url = 'https://graph.facebook.com/oauth/access_token?'
+    url += 'grant_type=fb_exchange_token&client_id='
+    url += '%s&client_secret=%s&fb_exchange_token=%s' % \
+           (app_id, app_secret, access_token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
 
     # Use token to get user info from API
     userinfo_url = "https://graph.facebook.com/v2.8/me"
-    '''
-        Due to the formatting for the result from the server token exchange we have to
-        split the token first on commas and select the first index which gives us the key : value
-        for the server access token then we split it on colons to pull out the actual token value
-        and replace the remaining quotes with nothing so that it can be used directly in the graph
-        api calls
-    '''
     token = result.split(',')[0].split(':')[1].replace('"', '')
 
-    url = 'https://graph.facebook.com/v2.8/me?access_token=%s&fields=name,id,email' % token
+    url = 'https://graph.facebook.com/v2.8/me?'
+    url += 'access_token=%s&fields=name,id,email' % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     # print "url sent for API access:%s"% url
@@ -259,7 +292,8 @@ def fbconnect():
     login_session['access_token'] = token
 
     # Get user picture
-    url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token
+    url = 'https://graph.facebook.com/v2.8/me/picture'
+    url += '?access_token=%s&redirect=0&height=200&width=200' % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
@@ -279,7 +313,9 @@ def fbconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;border-radius: '
+    output += '150px;-webkit-border-radius: 150px;'
+    output += '-moz-border-radius: 150px;"> '
 
     flash("Now logged in as %s" % login_session['username'])
     return output
@@ -306,13 +342,15 @@ def gconnect():
         # Upgrade the authorization code into a credentials object
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
-        response = make_response(json.dumps('Failed to upgrade the authorization code.'), 401)
+        response = make_response(json.dumps('Failed to upgrade the' +
+                                            'authorization code.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
     # Check that the access token is valid.
     access_token = credentials.access_token
-    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
+    url = ('https://www.googleapis.com/oauth2/v1/' +
+           'tokeninfo?access_token=%s' % access_token)
 
     # Submite request, parse response - Python3 compatible
     h = httplib2.Http()
@@ -329,13 +367,13 @@ def gconnect():
     # Verify that the access token is used for the intended user
     gplus_id = credentials.id_token['sub']
     if result['user_id'] != gplus_id:
-        response = make_response(json.dumps("Token's user ID does not match"), 401)
+        response = make_response(json.dumps("Invalid user."), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
     # Verify that the access token is valid for this app
     if result['issued_to'] != CLIENT_ID:
-        response = make_response(json.dumps("Token's client ID does not match app's."), 401)
+        response = make_response(json.dumps("Invalid access token."), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -343,7 +381,7 @@ def gconnect():
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'), 200)
+        response = make_response(json.dumps("Already logged in."), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -384,7 +422,8 @@ def fbdisconnect():
     facebook_id = login_session['facebook_id']
     # The access token must me included to successfully logout
     access_token = login_session['access_token']
-    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id, access_token)
+    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % \
+          (facebook_id, access_token)
     h = httplib2.Http()
     result = h.request(url, 'DELETE')[1]
 
@@ -400,7 +439,8 @@ def gdisconnect():
     # Only disconnect a connected user.
     access_token = login_session.get('access_token')
     if access_token is None:
-        response = make_response(json.dumps('Current user not connected.'), 401)
+        response = make_response(json.dumps('Current user not connected.'),
+                                 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -408,7 +448,8 @@ def gdisconnect():
     print 'In gdisconnect access token is %s', access_token
     print 'Username is: '
     print login_session['username']
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % \
+          login_session['access_token']
     print url
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
@@ -427,7 +468,7 @@ def gdisconnect():
         return response
     else:
         # The given token was invalid
-        response = make_response(json.dumps('Failed to revoke token for given user.'), 400)
+        response = make_response(json.dumps('Given token invalid.'), 400)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -450,10 +491,12 @@ def disconnect():
 
 # User Helper Functions
 def createUser(login_session):
-    newUser = User(name=login_session['username'], email=login_session['email'])
+    newUser = User(name=login_session['username'],
+                   email=login_session['email'])
     session.add(newUser)
     session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
+    user = session.query(User) \
+                  .filter_by(email=login_session['email']).one()
     return user.id
 
 
