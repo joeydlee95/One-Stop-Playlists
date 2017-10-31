@@ -1,10 +1,10 @@
-# Hear Me Out!
+# One Stop Playlists
 
 ## Introduction
 This is an application that can persistently store your favorite songs or videos in playlists that you create. This application uses the flask framework and OAuth 2 authorization framework.
 
-## Build/Installing
-1. git clone https://github.com/joeydlee95/item-catalog
+## Build/Installing locally
+1. git clone https://github.com/joeydlee95/One-Stop-Playlists
 2. vagrant up
 3. vagrant ssh
 4. cd /vagrant
